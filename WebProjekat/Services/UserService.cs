@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -31,20 +32,23 @@ namespace WebProjekat.Services
 			_userRepository = userRepository;
 		}
 
-		public bool ChangePassword(PasswordDto userPass)
+		public bool ChangePassword(PasswordDto userPass, out string mess)
 		{
 			var user = _userRepository.GetUser(userPass.Email);
-			if (user == null)
+			if (user == null) {
+				mess = "korisnik ne postoji.";
 				return false;
-
-			if(user.Password == Hash(userPass.OldPassword))
-			{
-				user.Password = Hash(userPass.NewPassword);
-				_userRepository.UpdateUser(user);
-				return true;
 			}
 
-			return false;
+			if (user.Password != Hash(userPass.OldPassword))
+			{
+				mess = "Neispravna stara lozinka.";
+				return false;
+			}
+			user.Password = Hash(userPass.NewPassword);
+			_userRepository.UpdateUser(user);
+			mess = "";
+			return true;
 
 		}
 		public string Hash(string password)
@@ -82,14 +86,8 @@ namespace WebProjekat.Services
 				return null;
 
 			string role = user.UserType.ToString();
-			if(user.Password == Hash(dto.Password))
+			if (user.Password == Hash(dto.Password))
 			{
-				if (user.UserType == EUserType.SELLER)
-				{
-					var seller = (Seller)user;
-					if (seller.Approved != ESeller.VERIFIED)
-						role = "UNVERIFIED";
-				}
 				token.Token = CreateToken(role, user.Email);
 				token.UserType = user.UserType;
 			}
@@ -106,7 +104,7 @@ namespace WebProjekat.Services
 			var tokeOptions = new JwtSecurityToken(
 				issuer: "https://localhost:44321", //url servera koji je izdao token
 				claims: claims, //claimovi
-				expires: DateTime.Now.AddMinutes(25), //vazenje tokena u minutama
+				expires: DateTime.Now.AddMinutes(20), //vazenje tokena u minutama
 				signingCredentials: signinCredentials //kredencijali za potpis
 			);
 			string tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
@@ -117,13 +115,21 @@ namespace WebProjekat.Services
 		{
 			TokenDTO token = null;
 			string userType = "";
-
-			/*if (userReg.UserType == EUserType.ADMIN)
+			if (userReg.Email == "" || userReg.FirstName == "" || userReg.LastName == "" || userReg.UserName == "" || userReg.Address == "" || userReg.Birthday == "")
+			{
+				mess = "Morate popuniti sva polja.";
+				return token;
+			}
+			if (userReg.UserType == EUserType.ADMIN)
 			{
 				mess = "Ne mozete se registrovati kao admin";
 				return token;
-			}*/
-
+			}
+			if(_userRepository.GetUser(userReg.Email) != null)
+			{
+				mess = "korisnik sa ovim email-om vec postoji";
+				return token;
+			}
 			userReg.Password = Hash(userReg.Password);
 			userType = userReg.UserType.ToString();
 
@@ -134,14 +140,11 @@ namespace WebProjekat.Services
 
 					break;
 				case EUserType.SELLER:
-					userType = "UNVERIFIED";
+					
 					var seller = _mapper.Map<Seller>(userReg);
 					seller.Approved = ESeller.IN_PROCESS;
 					_userRepository.AddUser(seller);
 
-					break;
-				case EUserType.ADMIN:
-					_userRepository.AddUser(_mapper.Map<Admin>(userReg));
 					break;
 			}
 
@@ -191,42 +194,37 @@ namespace WebProjekat.Services
 			seller.Approved = status;
 			_userRepository.SetSellerStatus(seller);
 
-			var vr = status.ToString();
-			var apiKey = "E768E081003B29BF53422EC3597F30618F3E05C3A893FEFE1118B10338F1D41724E4A0488A9C06372E3A6819FCA263C0";
-			var recipientEmail = email;
-			var subject = "Status of verification";
-			var bodyHtml = $"<h1>Hello, your status of verification is</h1><p>{vr}</p>";
-			SendEmail(apiKey, recipientEmail, subject, bodyHtml);
+			
+			SendEmail(email);
 
 			return true;
 		}
 
-		private static void SendEmail(string apiKey, string recipientEmail, string subject, string body)
+		private void SendEmail(string recipientEmail)
 		{
-			using (var client = new HttpClient())
+			try
 			{
-				client.BaseAddress = new Uri("https://api.elasticemail.com/v2/");
-				client.DefaultRequestHeaders.Accept.Clear();
-
-				var requestContent = new StringContent(
-					$"apikey={Uri.EscapeDataString(apiKey)}&from=mica.mitrovic10@gmail.com&to=" +
-					$"{Uri.EscapeDataString(recipientEmail)}&subject={Uri.EscapeDataString(subject)}&bodyHtml=" +
-					$"{Uri.EscapeDataString(body)}",
-					Encoding.UTF8,
-					"application/x-www-form-urlencoded"
-				);
-
-				var response = client.PostAsync("email/send", requestContent).Result;
-
-				if (response.IsSuccessStatusCode)
+				using (var mail = new MailMessage())
 				{
-					Console.WriteLine("Email sent successfully!");
+					mail.From = new MailAddress("mica.mitrovic10@gmail.com", "Web Projekat");
+					mail.To.Add(recipientEmail);
+					mail.Subject = "Welcome to Your App!";
+					mail.Body = "Welcome to Your App! We're excited to have you on board.";
+					mail.IsBodyHtml = true;
+
+					using (var smtp = new SmtpClient("smtp.yourprovider.com"))
+					{
+						smtp.Port = 587;
+						smtp.Credentials = new System.Net.NetworkCredential("mica.mitrovic10@gmail.com", "slavicamaca");
+						smtp.EnableSsl = true;
+
+						smtp.Send(mail);
+					}
 				}
-				else
-				{
-					var errorResponse = response.Content.ReadAsStringAsync().Result;
-					Console.WriteLine("Failed to send email. Error message: " + errorResponse);
-				}
+			}
+			catch (Exception ex)
+			{
+				// Handle exceptions
 			}
 		}
 	}

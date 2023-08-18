@@ -41,7 +41,7 @@ namespace WebProjekat.Repository
 			return _dbContext.Items.ToList();
 		}
 
-		public List<int> GetProductsBySeller(string sellerID)
+		public List<int> GetItemsBySeller(string sellerID)
 		{
 			return _dbContext.Items.Where(x => x.SellerId.Equals(sellerID))
 									.Select(x => x.ItemId)

@@ -93,7 +93,7 @@ namespace WebProjekat
 			services.AddCors(options =>
 			{
 				options.AddPolicy(name: _cors, builder => {
-					builder.WithOrigins("https://localhost:4200")//Ovde navodimo koje sve aplikacije smeju kontaktirati nasu,u ovom slucaju nas Angular front
+					builder.WithOrigins("http://localhost:3000")//Ovde navodimo koje sve aplikacije smeju kontaktirati nasu,u ovom slucaju nas Angular front
 						   .AllowAnyHeader()
 						   .AllowAnyMethod()
 						   .AllowCredentials();
@@ -109,12 +109,22 @@ namespace WebProjekat
 			IMapper mapper = mapperConfig.CreateMapper();
 			services.AddSingleton(mapper);
 			services.AddMvc();
-			
+			//services.AddFluentValidationAutoValidation();
+			/*services.AddScoped<IValidator<RegistrationUserDto>, RegisterUserDTOValidator>();
+			services.AddScoped<IValidator<LogInDto>, LogInUserDTOValidator>();
+			services.AddScoped<IValidator<UpdateUserDto>, UpdateUserDTOValidator>();
+			services.AddScoped<IValidator<PasswordDto>, ChangePasswordDTOValidator>();
+			services.AddScoped<IValidator<ItemDto>, ProductDTOValidator>();
+			services.AddScoped<IValidator<OrderItemDto>, OrderItemDTOValidator>();
+			services.AddScoped<IValidator<OrderDto>, OrderDTOValidator>();*/
+
 			services.AddScoped<IUserRepo, UserRepo>();
 			services.AddScoped<IItemRepo, ItemRepo>();
+			services.AddScoped<IOrderRepo, OrderRepo>();
 
 			services.AddScoped<IUserService, UserService>();
 			services.AddScoped<IItemService, ItemService>();
+			services.AddScoped<IOrderService, OrderService>();
 
 		}
 

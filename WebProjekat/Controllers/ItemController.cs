@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebProjekat.DTO;
+using WebProjekat.Interfaces;
 using WebProjekat.Services;
 
 namespace WebProjekat.Controllers
@@ -14,8 +15,8 @@ namespace WebProjekat.Controllers
 	[ApiController]
 	public class ItemController : ControllerBase
 	{
-		private readonly ItemService _itemService;
-		public ItemController (ItemService itemService)
+		private readonly IItemService _itemService;
+		public ItemController (IItemService itemService)
 		{
 			_itemService = itemService;
 		}
@@ -38,8 +39,8 @@ namespace WebProjekat.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("products")]
-        public IActionResult GetProducts()
+        [HttpGet("items")]
+        public IActionResult GetItemss()
         {
             return Ok(_itemService.GetItems());
         }

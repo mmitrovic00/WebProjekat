@@ -11,7 +11,7 @@ namespace WebProjekat.Interfaces
 	{
 		UserDto GetByEmail(string email);
 		bool UpdateUser(UpdateUserDto newUser);
-		bool ChangePassword(PasswordDto data);
+		bool ChangePassword(PasswordDto data, out string mess);
 		TokenDTO Registration(RegistrationUserDto dto, out string mess);
 		TokenDTO LogIn(LogInDto dto);
 

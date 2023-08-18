@@ -16,7 +16,8 @@ namespace WebProjekat.Models
 		public string Comment { get; set; }
 		public double Cost { get; set; }
 		public double Time { get; set; }
-		public DateTime Date { get; set; }
+		public DateTime DateofDelivery { get; set; }
+		public DateTime DateofOrder { get; set; }
 		public EOrder OrderStatus { get; set; }
 		public List<OrderItem> OrderedItems { get; set; }
 	}

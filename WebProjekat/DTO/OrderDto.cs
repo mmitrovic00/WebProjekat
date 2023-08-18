@@ -14,7 +14,9 @@ namespace WebProjekat.DTO
 		public string Comment { get; set; }
 		public double Cost { get; set; }
 		public double Time { get; set; }
-		public DateTime Date { get; set; }
+		public DateTime DateOfDelivery { get; set; }
+		public DateTime DateOfOrder { get; set; }
 		public EOrder OrderStatus { get; set; }
+		public List<OrderItemDto> OrderedItems { get; set; }
 	}
 }

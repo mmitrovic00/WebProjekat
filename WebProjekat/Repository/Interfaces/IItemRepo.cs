@@ -13,6 +13,6 @@ namespace WebProjekat.Repository.Interfaces
         Item GetItem(int id);
         void UpdateItem(Item item);
         void DeleteItem(Item item);
-        List<int> GetProductsBySeller(string sellerID);
+        List<int> GetItemsBySeller(string sellerID);
     }
 }
